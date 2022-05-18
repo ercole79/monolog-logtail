@@ -22,6 +22,8 @@ class LogtailHandler extends \Monolog\Handler\AbstractProcessingHandler {
      */
     private $client;
 
+    private $channels;
+
     /**
      * @param string $sourceToken
      * @param string $hostname
@@ -31,6 +33,7 @@ class LogtailHandler extends \Monolog\Handler\AbstractProcessingHandler {
     public function __construct(
         $sourceToken,
         $level = \Monolog\Logger::DEBUG,
+        $channels = [],
         $bubble = true,
         $endpoint = LogtailClient::URL
     ) {
@@ -42,13 +45,26 @@ class LogtailHandler extends \Monolog\Handler\AbstractProcessingHandler {
         $this->pushProcessor(new \Monolog\Processor\WebProcessor);
         $this->pushProcessor(new \Monolog\Processor\ProcessIdProcessor);
         $this->pushProcessor(new \Monolog\Processor\HostnameProcessor);
+
+        $this->channels = $channels;
     }
 
     /**
      * @param array $record
      */
     protected function write(array $record): void {
-        $this->client->send($record["formatted"]);
+        $skip = false;
+        if (count($this->channels) > 0) {
+            $excluded = array_filter($this->channels, function ($channel) {
+                return substr($channel, 0, 1) === "!";
+            });
+            $included = array_filter($this->channels, function ($channel) {
+                return substr($channel, 0, 1) !== "!";
+            });
+            if (count($included) > 0 && !in_array($record["channel"], $included)) $skip = true;
+            if (in_array("!".$record["channel"], $excluded)) $skip = true;
+        }
+        if (!$skip) $this->client->send($record["formatted"]);
     }
 
     /**

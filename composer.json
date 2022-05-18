@@ -1,7 +1,7 @@
 {
-    "name": "logtail/monolog-logtail",
+    "name": "ercole79/monolog-logtail",
     "description": "Logtail handler for Monolog",
-    "homepage": "https://github.com/logtail/logtail-php",
+    "homepage": "https://github.com/ercole79/monolog-logtail",
     "type": "library",
     "license": "ISC",
     "keywords": [
